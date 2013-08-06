@@ -1,0 +1,8 @@
+<launch>
+	<node pkg="vicon_bridge" type="vicon_bridge" name="vicon" output="screen">
+		<param name="stream_mode" value="ClientPull" type="str" />
+		<!--param name="datastream_hostport" value="192.168.0.13:801" type="str" /-->
+		<param name="datastream_hostport" value="vicon:801" type="str" />
+		<param name="tf_ref_frame_id" value="/world" type="str" />
+		</node>
+</launch>

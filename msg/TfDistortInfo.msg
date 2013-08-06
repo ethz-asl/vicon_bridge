@@ -1,0 +1,17 @@
+float64 tf_pub_rate
+string tf_ref_frame
+string tf_frame_in
+string tf_frame_out
+int32 delay
+float64 position_scale
+string noise_type
+float64 sigma_roll_pitch
+float64 sigma_yaw
+float64 sigma_xy
+float64 sigma_z
+float64 random_walk_k_xy
+float64 random_walk_k_z
+float64 random_walk_sigma_xy
+float64 random_walk_sigma_z
+float64 random_walk_tau_xy
+float64 random_walk_tau_z

@@ -167,7 +167,8 @@ namespace DeviceType
   enum Enum
   {
     Unknown,
-    ForcePlate
+    ForcePlate,
+    EyeTracker
   };
 }
 
@@ -179,8 +180,40 @@ namespace Unit
     Volt,
     Newton,
     NewtonMeter,
-    Meter
+    Meter,
+    Kilogram,
+    Second,
+    Ampere,
+    Kelvin,
+    Mole,
+    Candela,
+    Radian,
+    Steradian,
+    MeterSquared,
+    MeterCubed,
+    MeterPerSecond,
+    MeterPerSecondSquared,
+    RadianPerSecond,
+    RadianPerSecondSquared,
+    Hertz,
+    Joule,
+    Watt,
+    Pascal,
+    Lumen,
+    Lux,
+    Coulomb,
+    Ohm,
+    Farad,
+    Weber,
+    Tesla,
+    Henry,
+    Siemens,
+    Becquerel,
+    Gray,
+    Sievert,
+    Katal
   };
+
 }
 
 namespace Result
@@ -372,6 +405,13 @@ namespace Result
     TimecodeStandard::Enum Standard;
     unsigned int           SubFramesPerFrame;
     unsigned int           UserBits;
+  };
+
+  class Output_GetFrameRate
+  {
+  public:
+    Result::Enum Result;
+    double FrameRateHz;
   };
 
   class Output_GetLatencySampleCount
@@ -654,6 +694,14 @@ namespace Result
     bool         Occluded;
   };
 
+  class Output_GetDeviceOutputSubsamples
+  {
+  public:
+    Result::Enum Result;
+    unsigned int DeviceOutputSubsamples;
+    bool         Occluded;
+  };
+
   class Output_GetForcePlateCount
   {
   public:
@@ -682,6 +730,36 @@ namespace Result
     double       CentreOfPressure[ 3 ];
   };
 
+  class Output_GetForcePlateSubsamples
+  {
+  public:
+    Result::Enum Result;
+    unsigned int ForcePlateSubsamples;
+  };
+
+  class Output_GetEyeTrackerCount
+  {
+  public:
+    Result::Enum Result;
+    unsigned int EyeTrackerCount;
+  };
+
+  class Output_GetEyeTrackerGlobalPosition
+  {
+  public:
+    Result::Enum Result;
+    double       Position[ 3 ];
+    bool         Occluded;
+  };
+
+  class Output_GetEyeTrackerGlobalGazeVector
+  {
+  public:
+    Result::Enum Result;
+    double       GazeVector[ 3 ];
+    bool         Occluded;
+  };
+
   class ClientImpl;
 
   class CLASS_DECLSPEC Client
@@ -693,7 +771,7 @@ namespace Result
     Output_GetVersion  GetVersion() const;
 
     Output_Connect     Connect( const String & HostName );
-    Output_ConnectToMulticast ConnectToMulticast( const String & HostName, const String & MulticastIP );
+    Output_ConnectToMulticast ConnectToMulticast( const String & LocalIP, const String & MulticastIP );
     Output_Disconnect  Disconnect();
     Output_IsConnected IsConnected() const;
     Output_StartTransmittingMulticast StartTransmittingMulticast( const String & ServerIP,
@@ -725,6 +803,8 @@ namespace Result
     Output_GetFrameNumber GetFrameNumber() const;
 
     Output_GetTimecode GetTimecode() const;
+
+    Output_GetFrameRate GetFrameRate() const;
 
     Output_GetLatencySampleCount GetLatencySampleCount() const;
     Output_GetLatencySampleName  GetLatencySampleName( const unsigned int LatencySampleIndex ) const;
@@ -823,11 +903,33 @@ namespace Result
     Output_GetDeviceOutputValue GetDeviceOutputValue( const String & DeviceName,
                                                       const String & DeviceOutputName ) const;
 
+    Output_GetDeviceOutputSubsamples GetDeviceOutputSubsamples( const String & DeviceName,
+                                                                const String & DeviceOutputName ) const;
+
+    Output_GetDeviceOutputValue GetDeviceOutputValue( const String & DeviceName,
+                                                      const String & DeviceOutputName,
+                                                      const unsigned int Subsample ) const;
+
     Output_GetForcePlateCount GetForcePlateCount() const;
 
     Output_GetGlobalForceVector GetGlobalForceVector( const unsigned int ForcePlateIndex ) const;
     Output_GetGlobalMomentVector GetGlobalMomentVector( const unsigned int ForcePlateIndex ) const;
     Output_GetGlobalCentreOfPressure GetGlobalCentreOfPressure( const unsigned int ForcePlateIndex ) const;
+
+    Output_GetForcePlateSubsamples GetForcePlateSubsamples( const unsigned int ForcePlateIndex ) const;
+
+    Output_GetGlobalForceVector GetGlobalForceVector( const unsigned int ForcePlateIndex, const unsigned int Subsample ) const;
+    Output_GetGlobalMomentVector GetGlobalMomentVector( const unsigned int ForcePlateIndex, const unsigned int Subsample ) const;
+    Output_GetGlobalCentreOfPressure GetGlobalCentreOfPressure( const unsigned int ForcePlateIndex, const unsigned int Subsample ) const;
+
+
+
+    Output_GetEyeTrackerCount GetEyeTrackerCount() const;
+
+    Output_GetEyeTrackerGlobalPosition GetEyeTrackerGlobalPosition( const unsigned int EyeTrackerIndex ) const;
+    Output_GetEyeTrackerGlobalGazeVector GetEyeTrackerGlobalGazeVector( const unsigned int EyeTrackerIndex ) const;
+
+
 
   private:
     ClientImpl * m_pClientImpl;

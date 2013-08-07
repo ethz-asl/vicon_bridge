@@ -31,8 +31,11 @@ generate_dynamic_reconfigure_options(
   cfg/tf_distort.cfg
 )
 
-catkin_package(
-    CATKIN_DEPENDS roscpp message_runtime geometry_msgs
+catkin_package(CATKIN_DEPENDS 
+    dynamic_reconfigure
+    geometry_msgs
+    message_runtime 
+    roscpp 
 )
 
 # check for platform and use the right Vicon SDK
@@ -72,7 +75,7 @@ target_link_libraries(tf_distort
    ${catkin_LIBRARIES}
    ${Boost_LIBRARIES}
 )
-add_dependencies(tf_distort ${PROJECT_NAME}_gencpp)
+add_dependencies(tf_distort ${PROJECT_NAME}_gencpp ${PROJECT_NAME}_gencfg)
 
 add_executable(testclient src/ViconDataStreamSDK_CPPTest.cpp)
 target_link_libraries(testclient 

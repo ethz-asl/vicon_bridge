@@ -1,0 +1,31 @@
+<package>
+  <name>vicon_bridge</name>
+  <version>1.0.1</version>
+  <description>
+
+     This is a driver providing data from VICON motion capture systems. It is based on the vicon_mocap package from the starmac stacks. 
+     Additionally, it can handle multiple subjects / segments and allows to calibrate an origin of the vehicle(s) as this is somehow tedious with the VICON Tracker.
+
+  </description>
+  <maintainer email="markus.achtelik@mavt.ethz.ch">Markus Achtelik</maintainer>
+  <license>BSD, based on vicon_mocap from the starmac stacks </license>
+  <url>http://ros.org/wiki/vicon_bridge</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>diagnostic_updater</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
+
+  <run_depend>diagnostic_updater</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>tf</run_depend>
+</package>
+
+

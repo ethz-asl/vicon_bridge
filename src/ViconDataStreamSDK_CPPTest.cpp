@@ -14,6 +14,8 @@
 #ifdef WIN32
   #include <conio.h>   // For _kbhit()
   #include <windows.h> // For Sleep()
+#else
+  #include <unistd.h> // for sleep()
 #endif // WIN32
 
 using namespace ViconDataStreamSDK::CPP;

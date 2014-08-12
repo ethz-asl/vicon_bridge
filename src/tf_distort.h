@@ -44,7 +44,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <queue>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/signals2.hpp>
+
+#if ROS_VERSION_MINIMUM(1, 11, 7)
+#include <boost/signals2.hpp> // ros indigo
+typedef boost::signals2::connection Connection;
+#else
+#include <boost/signals.hpp> // ros hydro or older
+typedef boost::signals::connection Connection;
+#endif
 
 #include <vicon_bridge/TfDistortInfo.h>
 
@@ -116,7 +123,7 @@ private:
   DelayedTransformQueue tf_queue_;
   boost::mutex tf_queue_mutex_;
 
-  boost::signals2::connection tf_cb_;
+  Connection tf_cb_;
   tf::TransformBroadcaster tf_broadcaster;
   tf::TransformListener tf_listener_;
 //  boost::mutex pose_pub_mutex_;

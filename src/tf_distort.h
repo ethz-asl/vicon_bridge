@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <queue>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/signals2.hpp>
 
 #include <vicon_bridge/TfDistortInfo.h>
 
@@ -115,7 +116,7 @@ private:
   DelayedTransformQueue tf_queue_;
   boost::mutex tf_queue_mutex_;
 
-  boost::signals::connection tf_cb_;
+  boost::signals2::connection tf_cb_;
   tf::TransformBroadcaster tf_broadcaster;
   tf::TransformListener tf_listener_;
 //  boost::mutex pose_pub_mutex_;

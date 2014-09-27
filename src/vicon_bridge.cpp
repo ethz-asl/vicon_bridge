@@ -221,7 +221,10 @@ public:
     nh_priv.param("stream_mode", stream_mode_, stream_mode_);
     nh_priv.param("datastream_hostport", host_name_, host_name_);
     nh_priv.param("tf_ref_frame_id", tf_ref_frame_id_, tf_ref_frame_id_);
-    ROS_ASSERT(init_vicon());
+    if (init_vicon() == false){
+      ROS_ERROR("Error while connecting to Vicon. Exiting now.");
+      return;
+    }
     // Service Server
     ROS_INFO("setting up grab_vicon_pose service server ... ");
     m_grab_vicon_pose_service_server = nh_priv.advertiseService("grab_vicon_pose", &ViconReceiver::grabPoseCallback,
@@ -242,7 +245,9 @@ public:
     {
       std::cout << time_log_[i] << std::endl;
     }
-    ROS_ASSERT(shutdown_vicon());
+    if (shutdown_vicon() == false){
+      ROS_ERROR("Error while shutting down Vicon.");
+    }
   }
 
 private:

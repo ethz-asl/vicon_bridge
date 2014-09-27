@@ -245,7 +245,9 @@ public:
     {
       std::cout << time_log_[i] << std::endl;
     }
-    ROS_ASSERT(shutdown_vicon());
+    if (shutdown_vicon() == false){
+      ROS_ERROR("Error while shutting down Vicon.");
+    }
   }
 
 private:

@@ -183,6 +183,8 @@ private:
   bool marker_data_enabled;
   bool unlabeled_marker_data_enabled;
 
+  bool broadcast_tf_, publish_tf_, publish_markers_;
+
   bool grab_frames_;
   boost::thread grab_frames_thread_;
   SegmentMap segment_publishers_;
@@ -207,7 +209,7 @@ public:
   ViconReceiver() :
     nh_priv("~"), diag_updater(), min_freq_(0.1), max_freq_(1000),
         freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)), stream_mode_("ClientPull"),
-        host_name_(""), tf_ref_frame_id_("/world"), tracked_frame_suffix_("vicon"),
+        host_name_(""), tf_ref_frame_id_("world"), tracked_frame_suffix_("vicon"),
         lastFrameNumber(0), frameCount(0), droppedFrameCount(0), frame_datum(0), n_markers(0), n_unlabeled_markers(0),
         marker_data_enabled(false), unlabeled_marker_data_enabled(false), grab_frames_(false)
 
@@ -221,6 +223,9 @@ public:
     nh_priv.param("stream_mode", stream_mode_, stream_mode_);
     nh_priv.param("datastream_hostport", host_name_, host_name_);
     nh_priv.param("tf_ref_frame_id", tf_ref_frame_id_, tf_ref_frame_id_);
+    nh_priv.param("broadcast_transform", broadcast_tf_, true);
+    nh_priv.param("publish_transform", publish_tf_, true);
+    nh_priv.param("publish_markers", publish_markers_, true);
     if (init_vicon() == false){
       ROS_ERROR("Error while connecting to Vicon. Exiting now.");
       return;
@@ -235,7 +240,10 @@ public:
                                                          this);
 
     // Publishers
-    marker_pub_ = nh.advertise<vicon_bridge::Markers> (tracked_frame_suffix_ + "/markers", 10);
+    if(publish_markers_)
+    {
+      marker_pub_ = nh.advertise<vicon_bridge::Markers>(tracked_frame_suffix_ + "/markers", 10);
+    }
     startGrabbing();
   }
 
@@ -321,9 +329,11 @@ private:
     // we don't need the lock anymore, since rest is protected by is_ready
     lock.unlock();
 
-    spub.pub = nh.advertise<geometry_msgs::TransformStamped> (tracked_frame_suffix_ + "/" + subject_name + "/"
-        + segment_name, 10);
-
+    if(publish_tf_)
+    {
+      spub.pub = nh.advertise<geometry_msgs::TransformStamped>(tracked_frame_suffix_ + "/" + subject_name + "/"
+                                                                                                            + segment_name, 10);
+    }
     // try to get zero pose from parameter server
     string param_suffix(subject_name + "/" + segment_name + "/zero_pose/");
     double qw, qx, qy, qz, x, y, z;
@@ -431,8 +441,15 @@ private:
       freq_status_.tick();
       ros::Duration vicon_latency(msvcbridge::GetLatencyTotal().Total);
 
-      process_subjects(now_time - vicon_latency);
-      process_markers(now_time - vicon_latency, lastFrameNumber);
+      if(publish_tf_ || broadcast_tf_)
+      {
+        process_subjects(now_time - vicon_latency);
+      }
+
+      if(publish_markers_)
+      {
+        process_markers(now_time - vicon_latency, lastFrameNumber);
+      }
 
       lastTime = now_time;
       return true;
@@ -490,8 +507,12 @@ private:
                   transforms.push_back(tf::StampedTransform(transform, frame_time, tf_ref_frame_id_, tracked_frame));
 //                  transform = tf::StampedTransform(flyer_transform, frame_time, tf_ref_frame_id_, tracked_frame);
 //                  tf_broadcaster_.sendTransform(transform);
-                  tf::transformStampedTFToMsg(transforms.back(), *pose_msg);
-                  seg.pub.publish(pose_msg);
+
+                  if(publish_tf_)
+                  {
+                    tf::transformStampedTFToMsg(transforms.back(), *pose_msg);
+                    seg.pub.publish(pose_msg);
+                  }
                 }
               }
               else
@@ -515,7 +536,10 @@ private:
       }
     }
 
-    tf_broadcaster_.sendTransform(transforms);
+    if(broadcast_tf_)
+    {
+      tf_broadcaster_.sendTransform(transforms);
+    }
     cnt++;
   }
 

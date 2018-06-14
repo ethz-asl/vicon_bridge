@@ -289,6 +289,8 @@ namespace msvcbridge{
 		return client.GetDeviceOutputValue(DeviceName, DeviceOutputName);
 	}
 
-
+    FUN_DECLSPEC const ViconDataStreamSDK::CPP::Output_GetObjectQuality GetObjectQuality( const ViconDataStreamSDK::CPP::String & ObjectName) {
+        return client.GetObjectQuality(ObjectName);
+    }
 
 };

@@ -158,6 +158,7 @@ namespace msvcbridge{
 	FUN_DECLSPEC const ViconDataStreamSDK::CPP::Output_GetDeviceOutputValue GetDeviceOutputValue( const ViconDataStreamSDK::CPP::String & DeviceName,
 	                                                      const ViconDataStreamSDK::CPP::String & DeviceOutputName );
 
+    FUN_DECLSPEC const ViconDataStreamSDK::CPP::Output_GetObjectQuality GetObjectQuality( const ViconDataStreamSDK::CPP::String & ObjectName);
 };
 
 #endif

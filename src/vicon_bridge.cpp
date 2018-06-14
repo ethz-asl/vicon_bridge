@@ -479,6 +479,10 @@ private:
         Output_GetSegmentGlobalTranslation trans = msvcbridge::GetSegmentGlobalTranslation(subject_name, segment_name);
         Output_GetSegmentGlobalRotationQuaternion quat = msvcbridge::GetSegmentGlobalRotationQuaternion(subject_name,
                                                                                                         segment_name);
+        Output_GetObjectQuality objquality = msvcbridge::GetObjectQuality(subject_name);
+        ROS_WARN_STREAM("" << "segmentname = " << segment_name << " ; "
+                        << "objquality = " << objquality.Quality << " ; "
+                        << "getqualityresult = " << objquality.Result << " ; ");
 
         if (trans.Result == Result::Success && quat.Result == Result::Success)
         {

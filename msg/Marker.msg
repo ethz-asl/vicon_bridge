@@ -3,3 +3,4 @@ string subject_name
 string segment_name
 geometry_msgs/Point translation
 bool occluded
+float64 quality

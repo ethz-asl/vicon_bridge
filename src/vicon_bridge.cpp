@@ -479,11 +479,6 @@ private:
         Output_GetSegmentGlobalTranslation trans = msvcbridge::GetSegmentGlobalTranslation(subject_name, segment_name);
         Output_GetSegmentGlobalRotationQuaternion quat = msvcbridge::GetSegmentGlobalRotationQuaternion(subject_name,
                                                                                                         segment_name);
-        Output_GetObjectQuality objquality = msvcbridge::GetObjectQuality(subject_name);
-        /*ROS_WARN_STREAM("" << "segmentname = " << segment_name << " ; "
-                        << "objquality = " << objquality.Quality << " ; "
-                        << "getqualityresult = " << objquality.Result << " ; ");
-	*/
 
         if (trans.Result == Result::Success && quat.Result == Result::Success)
         {
@@ -594,6 +589,9 @@ private:
           this_marker.translation.y = _Output_GetMarkerGlobalTranslation.Translation[1];
           this_marker.translation.z = _Output_GetMarkerGlobalTranslation.Translation[2];
           this_marker.occluded = _Output_GetMarkerGlobalTranslation.Occluded;
+
+          Output_GetObjectQuality _Output_GetObjectQuality = msvcbridge::GetObjectQuality( this_subject_name );
+          this_marker.quality = _Output_GetObjectQuality.Quality;
 
           markers_msg.markers.push_back(this_marker);
         }

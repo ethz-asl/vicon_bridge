@@ -9,17 +9,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "Client.h"
+#include "DataStreamClient.h"
 
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <cstdlib>
 #include <ctime>
+#include <vector>
+#include <string.h>
 
 #ifdef WIN32
   #include <conio.h>   // For _kbhit()
   #include <cstdio>   // For getchar()
   #include <windows.h> // For Sleep()
+#else
+  #include <unistd.h> // For sleep()
 #endif // WIN32
 
 #include <time.h>
@@ -171,6 +176,7 @@ int main( int argc, char* argv[] )
   {
     HostName = argv[1];
   }
+
   // log contains:
   // version number
   // log of framerate over time
@@ -180,12 +186,20 @@ int main( int argc, char* argv[] )
   std::string MulticastAddress = "244.0.0.0:44801";
   bool ConnectToMultiCast = false;
   bool EnableMultiCast = false;
+  bool EnableHapticTest = false;
+  bool bReadCentroids = false;
+  bool bReadRayData = false;
+
+  std::vector<std::string> HapticOnList(0);
+  unsigned int ClientBufferSize = 0;
+  std::string AxisMapping = "ZUp";
+
   for(int a=2; a < argc; ++a)
   {
     std::string arg = argv[a];
     if(arg == "--help")
     {
-      std::cout << argv[0] << " <HostName>: allowed options include:\n  --log_file <LogFile> --enable_multicast <MulticastAddress:Port> --connect_to_multicast <MulticastAddress:Port> --help" << std::endl;
+      std::cout << argv[0] << " <HostName>: allowed options include:\n  --log_file <LogFile> --enable_multicast <MulticastAddress:Port> --connect_to_multicast <MulticastAddress:Port> --help --enable_haptic_test <DeviceName> --centroids --client-buffer-size <size>" << std::endl;
       return 0;
     }
     else if (arg=="--log_file")
@@ -215,6 +229,54 @@ int main( int argc, char* argv[] )
         MulticastAddress = argv[a+1];
         std::cout << "connecting to multicast address <"<< MulticastAddress << "> ..." << std::endl;
         ++a;
+      }
+    }
+    else if (arg=="--enable_haptic_test")
+    {
+      EnableHapticTest = true;
+      ++a;
+      if ( a < argc )
+      {    
+        //assuming no haptic device name starts with "--"
+        while( a < argc && strncmp( argv[a], "--", 2 ) !=0  )
+        {
+          HapticOnList.push_back( argv[a] );
+          ++a;
+        }
+      }
+    }
+    else if( arg=="--centroids" )
+    {
+      bReadCentroids = true;
+    }
+    else if( arg=="--rays")
+    {
+      bReadRayData = true;
+    }
+    else if( arg == "--client-buffer-size" )
+    {
+      ++a;
+      if( a < argc )
+      {
+        ClientBufferSize = atoi( argv[a] );
+      }
+    }
+    else if( arg == "--set-axis-mapping" )
+    {
+      ++a;
+      if( a < argc )
+      {
+        AxisMapping = argv[a] ;
+
+        if( AxisMapping == "XUp" || AxisMapping == "YUp" || AxisMapping == "ZUp" )
+        {
+          std::cout << "Setting Axis to "<< AxisMapping << std::endl;
+        }
+        else
+        {
+          std::cout << "Unknown axis setting: "<<  AxisMapping <<" . Should be XUp, YUp, or ZUp" << std::endl;
+          return 1;
+        }
       }
     }
     else
@@ -264,7 +326,7 @@ int main( int argc, char* argv[] )
 
       std::cout << ".";
   #ifdef WIN32
-      Sleep( 200 );
+      Sleep( 1000 );
   #else
       sleep(1);
   #endif
@@ -275,12 +337,24 @@ int main( int argc, char* argv[] )
     MyClient.EnableSegmentData();
     MyClient.EnableMarkerData();
     MyClient.EnableUnlabeledMarkerData();
+    MyClient.EnableMarkerRayData();
     MyClient.EnableDeviceData();
+    MyClient.EnableDebugData();
+    if( bReadCentroids )
+    {
+      MyClient.EnableCentroidData();
+    }
+    if( bReadRayData )
+    {
+      MyClient.EnableMarkerRayData();
+    }
 
     std::cout << "Segment Data Enabled: "          << Adapt( MyClient.IsSegmentDataEnabled().Enabled )         << std::endl;
     std::cout << "Marker Data Enabled: "           << Adapt( MyClient.IsMarkerDataEnabled().Enabled )          << std::endl;
     std::cout << "Unlabeled Marker Data Enabled: " << Adapt( MyClient.IsUnlabeledMarkerDataEnabled().Enabled ) << std::endl;
     std::cout << "Device Data Enabled: "           << Adapt( MyClient.IsDeviceDataEnabled().Enabled )          << std::endl;
+    std::cout << "Centroid Data Enabled: "         << Adapt( MyClient.IsCentroidDataEnabled().Enabled )        << std::endl;
+    std::cout << "Marker Ray Data Enabled: "       << Adapt( MyClient.IsMarkerRayDataEnabled().Enabled )       << std::endl;
 
     // Set the streaming mode
     //MyClient.SetStreamMode( ViconDataStreamSDK::CPP::StreamMode::ClientPull );
@@ -291,9 +365,19 @@ int main( int argc, char* argv[] )
     MyClient.SetAxisMapping( Direction::Forward, 
                              Direction::Left, 
                              Direction::Up ); // Z-up
-    // MyClient.SetGlobalUpAxis( Direction::Forward, 
-    //                           Direction::Up, 
-    //                           Direction::Right ); // Y-up
+
+    if( AxisMapping == "YUp")
+    {
+      MyClient.SetAxisMapping( Direction::Forward, 
+                               Direction::Up, 
+                               Direction::Right ); // Y-up
+    }
+    else if( AxisMapping == "XUp")
+    {
+      MyClient.SetAxisMapping( Direction::Up, 
+                               Direction::Forward, 
+                               Direction::Left ); // Y-up
+    }
 
     Output_GetAxisMapping _Output_GetAxisMapping = MyClient.GetAxisMapping();
     std::cout << "Axis Mapping: X-" << Adapt( _Output_GetAxisMapping.XAxis ) 
@@ -305,6 +389,12 @@ int main( int argc, char* argv[] )
     std::cout << "Version: " << _Output_GetVersion.Major << "." 
                              << _Output_GetVersion.Minor << "." 
                              << _Output_GetVersion.Point << std::endl;
+
+    if( ClientBufferSize > 0 )
+    {
+      MyClient.SetBufferSize( ClientBufferSize );
+      std::cout << "Setting client buffer size to " << ClientBufferSize << std::endl;
+    }
 
     if( EnableMultiCast )
     {
@@ -358,8 +448,47 @@ int main( int argc, char* argv[] )
       Output_GetFrameNumber _Output_GetFrameNumber = MyClient.GetFrameNumber();
       output_stream << "Frame Number: " << _Output_GetFrameNumber.FrameNumber << std::endl;
 
+      if( EnableHapticTest == true )
+      {
+        for (size_t i = 0; i < HapticOnList.size(); ++ i)
+        {
+          if( Counter % 2 == 0 )
+          {
+              Output_SetApexDeviceFeedback Output= MyClient.SetApexDeviceFeedback( HapticOnList[i],  true ); 
+              if( Output.Result == Result::Success )
+              {
+                output_stream<< "Turn haptic feedback on for device: " << HapticOnList[i]<<std::endl;
+              }
+              else if( Output.Result == Result::InvalidDeviceName )
+              {
+                output_stream<< "Device doesn't exist: "<< HapticOnList[i]<<std::endl;
+              }
+          }
+          if( Counter % 20 == 0 )
+          {
+              Output_SetApexDeviceFeedback Output = MyClient.SetApexDeviceFeedback( HapticOnList[i],  false); 
+
+              if( Output.Result == Result::Success )
+              {
+                output_stream<< "Turn haptic feedback off for device: " << HapticOnList[i]<<std::endl;
+              }
+          }
+        }
+      }
+
       Output_GetFrameRate Rate = MyClient.GetFrameRate();
       std::cout << "Frame rate: "           << Rate.FrameRateHz          << std::endl;
+
+      // Show frame rates
+      for( unsigned int FramerateIndex = 0 ; FramerateIndex < MyClient.GetFrameRateCount().Count ; ++FramerateIndex )
+      {
+        std::string FramerateName  = MyClient.GetFrameRateName( FramerateIndex ).Name;
+        double      FramerateValue = MyClient.GetFrameRateValue( FramerateName ).Value;
+
+        output_stream << FramerateName << ": " << FramerateValue << "Hz" << std::endl;
+      }
+      output_stream << std::endl;
+
       // Get the timecode
       Output_GetTimecode _Output_GetTimecode  = MyClient.GetTimecode();
 
@@ -385,6 +514,11 @@ int main( int argc, char* argv[] )
         output_stream << "  " << SampleName << " " << SampleValue << "s" << std::endl;
       }
       output_stream << std::endl;
+
+      Output_GetHardwareFrameNumber _Output_GetHardwareFrameNumber = MyClient.GetHardwareFrameNumber();
+      output_stream << "Hardware Frame Number: " << _Output_GetHardwareFrameNumber.HardwareFrameNumber << std::endl;
+
+
 
       // Count the number of subjects
       unsigned int SubjectCount = MyClient.GetSubjectCount().SubjectCount;
@@ -562,6 +696,14 @@ int main( int argc, char* argv[] )
                                                             << Adapt( _Output_GetSegmentLocalRotationEulerXYZ.Occluded ) << std::endl;
         }
 
+        // Get the quality of the subject (object) if supported
+        Output_GetObjectQuality _Output_GetObjectQuality = MyClient.GetObjectQuality( SubjectName );
+        if( _Output_GetObjectQuality.Result == Result::Success )
+        {
+          double Quality = _Output_GetObjectQuality.Quality;
+          output_stream << "    Quality: " << Quality << std::endl;
+        }
+
         // Count the number of markers
         unsigned int MarkerCount = MyClient.GetMarkerCount( SubjectName ).MarkerCount;
         output_stream << "    Markers (" << MarkerCount << "):" << std::endl;
@@ -583,6 +725,24 @@ int main( int argc, char* argv[] )
                                         << _Output_GetMarkerGlobalTranslation.Translation[ 1 ]  << ", "
                                         << _Output_GetMarkerGlobalTranslation.Translation[ 2 ]  << ") "
                                         << Adapt( _Output_GetMarkerGlobalTranslation.Occluded ) << std::endl;
+
+          if( bReadRayData )
+          {
+            Output_GetMarkerRayContributionCount _Output_GetMarkerRayContributionCount =
+              MyClient.GetMarkerRayContributionCount(SubjectName, MarkerName);
+
+            if( _Output_GetMarkerRayContributionCount.Result == Result::Success )
+            {
+              output_stream << "      Contributed to by: ";
+              for( unsigned int ContributionIndex = 0; ContributionIndex < _Output_GetMarkerRayContributionCount.RayContributionsCount; ++ContributionIndex )
+              {
+                Output_GetMarkerRayContribution _Output_GetMarkerRayContribution =
+                  MyClient.GetMarkerRayContribution( SubjectName, MarkerName, ContributionIndex );
+                output_stream << "ID:" << _Output_GetMarkerRayContribution.CameraID << " Index:" << _Output_GetMarkerRayContribution.CentroidIndex << " ";
+              }
+              output_stream << std::endl;
+            }
+          }
         }
       }
 
@@ -640,9 +800,9 @@ int main( int argc, char* argv[] )
                                              DeviceOutputSubsample );
 
             output_stream << "          '" << _Output_GetDeviceOutputName.DeviceOutputName          << "' "
-                                          << _Output_GetDeviceOutputValue.Value                    << " " 
-                                          << Adapt( _Output_GetDeviceOutputName.DeviceOutputUnit ) << " " 
-                                          << Adapt( _Output_GetDeviceOutputValue.Occluded )        << std::endl;
+                                           << _Output_GetDeviceOutputValue.Value                    << " " 
+                                           << Adapt( _Output_GetDeviceOutputName.DeviceOutputUnit ) << " " 
+                                           << Adapt( _Output_GetDeviceOutputValue.Occluded )        << std::endl;
           }
         }
       }
@@ -657,7 +817,7 @@ int main( int argc, char* argv[] )
 
         unsigned int ForcePlateSubsamples = MyClient.GetForcePlateSubsamples( ForcePlateIndex ).ForcePlateSubsamples;
 
-		output_stream << "    Samples (" << ForcePlateSubsamples << "):" << std::endl;
+        output_stream << "    Samples (" << ForcePlateSubsamples << "):" << std::endl;
 
         for( unsigned int ForcePlateSubsample = 0; ForcePlateSubsample < ForcePlateSubsamples; ++ForcePlateSubsample )
         {
@@ -704,6 +864,40 @@ int main( int argc, char* argv[] )
         output_stream << _Output_GetEyeTrackerGlobalGazeVector.GazeVector[ 2 ] << ") ";
         output_stream << Adapt( _Output_GetEyeTrackerGlobalGazeVector.Occluded ) << std::endl;
       }
+
+      if( bReadCentroids )
+      {
+        unsigned int CameraCount = MyClient.GetCameraCount().CameraCount;
+        output_stream << "Cameras(" << CameraCount << "):" << std::endl;
+
+        for( unsigned int CameraIndex = 0; CameraIndex < CameraCount; ++CameraIndex )
+        {
+          output_stream << "  Camera #" << CameraIndex << ":" << std::endl;
+        
+          const std::string CameraName = MyClient.GetCameraName( CameraIndex ).CameraName;
+          output_stream << "    Name: " << CameraName << std::endl;
+
+          unsigned int CentroidCount = MyClient.GetCentroidCount( CameraName ).CentroidCount;
+          output_stream << "    Centroids(" << CentroidCount << "):" << std::endl;
+
+          for( unsigned int CentroidIndex = 0; CentroidIndex < CentroidCount; ++CentroidIndex )
+          {
+            output_stream << "      Centroid #" << CentroidIndex << ":" << std::endl;
+
+            Output_GetCentroidPosition _Output_GetCentroidPosition = MyClient.GetCentroidPosition( CameraName, CentroidIndex );
+            output_stream << "        Position: (" << _Output_GetCentroidPosition.CentroidPosition[0] << ", "
+                                                   << _Output_GetCentroidPosition.CentroidPosition[1] << ")" << std::endl;
+            output_stream << "        Radius: ("    << _Output_GetCentroidPosition.Radius   << ")" << std::endl;
+            //output_stream << "        Accuracy: ("  << _Output_GetCentroidPosition.Accuracy << ")" << std::endl;
+
+            Output_GetCentroidWeight _Output_GetCentroidWeight = MyClient.GetCentroidWeight( CameraName, CentroidIndex );
+            if( _Output_GetCentroidWeight.Result == Result::Success )
+            {
+              output_stream << "        Weighting: " << _Output_GetCentroidWeight.Weight << std::endl;
+            }
+          }
+        }
+      }
     }
 
     if( EnableMultiCast )
@@ -714,6 +908,14 @@ int main( int argc, char* argv[] )
     MyClient.DisableMarkerData();
     MyClient.DisableUnlabeledMarkerData();
     MyClient.DisableDeviceData();
+    if( bReadCentroids )
+    {
+      MyClient.DisableCentroidData();
+    }
+    if( bReadRayData )
+    {
+      bReadRayData = false;
+    }
 
     // Disconnect and dispose
     int t = clock();

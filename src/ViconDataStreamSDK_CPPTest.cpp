@@ -8,7 +8,8 @@
 // without the written permission of the copyright owner.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include "Client.h"
+// #include "Client.h"
+#include <DataStreamClient.h>
 #include <iostream>
 
 #ifdef WIN32
@@ -83,7 +84,7 @@ int main( int argc, char* argv[] )
 {
   // Program options
   bool TransmitMulticast = false;
-  
+
   std::string HostName = "192.168.0.12:801";
   if( argc == 2 )
   {
@@ -129,22 +130,22 @@ int main( int argc, char* argv[] )
 //   MyClient.SetStreamMode( ViconDataStreamSDK::CPP::StreamMode::ServerPush );
 
   // Set the global up axis
-  MyClient.SetAxisMapping( Direction::Forward, 
-                           Direction::Left, 
+  MyClient.SetAxisMapping( Direction::Forward,
+                           Direction::Left,
                            Direction::Up ); // Z-up
-  // MyClient.SetGlobalUpAxis( Direction::Forward, 
-  //                           Direction::Up, 
+  // MyClient.SetGlobalUpAxis( Direction::Forward,
+  //                           Direction::Up,
   //                           Direction::Right ); // Y-up
 
   Output_GetAxisMapping _Output_GetAxisMapping = MyClient.GetAxisMapping();
-  std::cout << "Axis Mapping: X-" << Adapt( _Output_GetAxisMapping.XAxis ) 
-                         << " Y-" << Adapt( _Output_GetAxisMapping.YAxis ) 
+  std::cout << "Axis Mapping: X-" << Adapt( _Output_GetAxisMapping.XAxis )
+                         << " Y-" << Adapt( _Output_GetAxisMapping.YAxis )
                          << " Z-" << Adapt( _Output_GetAxisMapping.ZAxis ) << std::endl;
 
   // Discover the version number
   Output_GetVersion _Output_GetVersion = MyClient.GetVersion();
-  std::cout << "Version: " << _Output_GetVersion.Major << "." 
-                           << _Output_GetVersion.Minor << "." 
+  std::cout << "Version: " << _Output_GetVersion.Major << "."
+                           << _Output_GetVersion.Minor << "."
                            << _Output_GetVersion.Point << std::endl;
 
   if( TransmitMulticast )
@@ -183,18 +184,18 @@ int main( int argc, char* argv[] )
 
     std::cout << "Timecode: "
               << _Output_GetTimecode.Hours               << "h "
-              << _Output_GetTimecode.Minutes             << "m " 
+              << _Output_GetTimecode.Minutes             << "m "
               << _Output_GetTimecode.Seconds             << "s "
               << _Output_GetTimecode.Frames              << "f "
               << _Output_GetTimecode.SubFrame            << "sf "
-              << Adapt( _Output_GetTimecode.FieldFlag ) << " " 
-              << _Output_GetTimecode.Standard            << " " 
-              << _Output_GetTimecode.SubFramesPerFrame   << " " 
+              << Adapt( _Output_GetTimecode.FieldFlag ) << " "
+              << _Output_GetTimecode.Standard            << " "
+              << _Output_GetTimecode.SubFramesPerFrame   << " "
               << _Output_GetTimecode.UserBits            << std::endl << std::endl;
 
     // Get the latency
     std::cout << "Latency: " << MyClient.GetLatencyTotal().Total << "s" << std::endl;
-    
+
     for( unsigned int LatencySampleIndex = 0 ; LatencySampleIndex < MyClient.GetLatencySampleCount().Count ; ++LatencySampleIndex )
     {
       std::string SampleName  = MyClient.GetLatencySampleName( LatencySampleIndex ).Name;
@@ -244,139 +245,139 @@ int main( int argc, char* argv[] )
         }
 
         // Get the static segment translation
-        Output_GetSegmentStaticTranslation _Output_GetSegmentStaticTranslation = 
+        Output_GetSegmentStaticTranslation _Output_GetSegmentStaticTranslation =
           MyClient.GetSegmentStaticTranslation( SubjectName, SegmentName );
-        std::cout << "        Static Translation: (" << _Output_GetSegmentStaticTranslation.Translation[ 0 ]  << ", " 
-                                                     << _Output_GetSegmentStaticTranslation.Translation[ 1 ]  << ", " 
+        std::cout << "        Static Translation: (" << _Output_GetSegmentStaticTranslation.Translation[ 0 ]  << ", "
+                                                     << _Output_GetSegmentStaticTranslation.Translation[ 1 ]  << ", "
                                                      << _Output_GetSegmentStaticTranslation.Translation[ 2 ]  << ") " << std::endl;
 
         // Get the static segment rotation in helical co-ordinates
-        Output_GetSegmentStaticRotationHelical _Output_GetSegmentStaticRotationHelical = 
+        Output_GetSegmentStaticRotationHelical _Output_GetSegmentStaticRotationHelical =
           MyClient.GetSegmentStaticRotationHelical( SubjectName, SegmentName );
-        std::cout << "        Static Rotation Helical: (" << _Output_GetSegmentStaticRotationHelical.Rotation[ 0 ]     << ", " 
-                                                          << _Output_GetSegmentStaticRotationHelical.Rotation[ 1 ]     << ", " 
+        std::cout << "        Static Rotation Helical: (" << _Output_GetSegmentStaticRotationHelical.Rotation[ 0 ]     << ", "
+                                                          << _Output_GetSegmentStaticRotationHelical.Rotation[ 1 ]     << ", "
                                                           << _Output_GetSegmentStaticRotationHelical.Rotation[ 2 ]     << ") " << std::endl;
 
         // Get the static segment rotation as a matrix
-        Output_GetSegmentStaticRotationMatrix _Output_GetSegmentStaticRotationMatrix = 
+        Output_GetSegmentStaticRotationMatrix _Output_GetSegmentStaticRotationMatrix =
           MyClient.GetSegmentStaticRotationMatrix( SubjectName, SegmentName );
-        std::cout << "        Static Rotation Matrix: (" << _Output_GetSegmentStaticRotationMatrix.Rotation[ 0 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 1 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 2 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 3 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 4 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 5 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 6 ]     << ", " 
-                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 7 ]     << ", " 
+        std::cout << "        Static Rotation Matrix: (" << _Output_GetSegmentStaticRotationMatrix.Rotation[ 0 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 1 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 2 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 3 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 4 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 5 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 6 ]     << ", "
+                                                         << _Output_GetSegmentStaticRotationMatrix.Rotation[ 7 ]     << ", "
                                                          << _Output_GetSegmentStaticRotationMatrix.Rotation[ 8 ]     << ") " << std::endl;
 
         // Get the static segment rotation in quaternion co-ordinates
-        Output_GetSegmentStaticRotationQuaternion _Output_GetSegmentStaticRotationQuaternion = 
+        Output_GetSegmentStaticRotationQuaternion _Output_GetSegmentStaticRotationQuaternion =
           MyClient.GetSegmentStaticRotationQuaternion( SubjectName, SegmentName );
-        std::cout << "        Static Rotation Quaternion: (" << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 0 ]     << ", " 
-                                                             << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 1 ]     << ", " 
-                                                             << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 2 ]     << ", " 
+        std::cout << "        Static Rotation Quaternion: (" << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 0 ]     << ", "
+                                                             << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 1 ]     << ", "
+                                                             << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 2 ]     << ", "
                                                              << _Output_GetSegmentStaticRotationQuaternion.Rotation[ 3 ]     << ") " << std::endl;
 
         // Get the static segment rotation in EulerXYZ co-ordinates
-        Output_GetSegmentStaticRotationEulerXYZ _Output_GetSegmentStaticRotationEulerXYZ = 
+        Output_GetSegmentStaticRotationEulerXYZ _Output_GetSegmentStaticRotationEulerXYZ =
           MyClient.GetSegmentStaticRotationEulerXYZ( SubjectName, SegmentName );
-        std::cout << "        Static Rotation EulerXYZ: (" << _Output_GetSegmentStaticRotationEulerXYZ.Rotation[ 0 ]     << ", " 
-                                                           << _Output_GetSegmentStaticRotationEulerXYZ.Rotation[ 1 ]     << ", " 
+        std::cout << "        Static Rotation EulerXYZ: (" << _Output_GetSegmentStaticRotationEulerXYZ.Rotation[ 0 ]     << ", "
+                                                           << _Output_GetSegmentStaticRotationEulerXYZ.Rotation[ 1 ]     << ", "
                                                            << _Output_GetSegmentStaticRotationEulerXYZ.Rotation[ 2 ]     << ") " << std::endl;
 
         // Get the global segment translation
-        Output_GetSegmentGlobalTranslation _Output_GetSegmentGlobalTranslation = 
+        Output_GetSegmentGlobalTranslation _Output_GetSegmentGlobalTranslation =
           MyClient.GetSegmentGlobalTranslation( SubjectName, SegmentName );
-        std::cout << "        Global Translation: (" << _Output_GetSegmentGlobalTranslation.Translation[ 0 ]  << ", " 
-                                                     << _Output_GetSegmentGlobalTranslation.Translation[ 1 ]  << ", " 
-                                                     << _Output_GetSegmentGlobalTranslation.Translation[ 2 ]  << ") " 
+        std::cout << "        Global Translation: (" << _Output_GetSegmentGlobalTranslation.Translation[ 0 ]  << ", "
+                                                     << _Output_GetSegmentGlobalTranslation.Translation[ 1 ]  << ", "
+                                                     << _Output_GetSegmentGlobalTranslation.Translation[ 2 ]  << ") "
                                                      << Adapt( _Output_GetSegmentGlobalTranslation.Occluded ) << std::endl;
 
         // Get the global segment rotation in helical co-ordinates
-        Output_GetSegmentGlobalRotationHelical _Output_GetSegmentGlobalRotationHelical = 
+        Output_GetSegmentGlobalRotationHelical _Output_GetSegmentGlobalRotationHelical =
           MyClient.GetSegmentGlobalRotationHelical( SubjectName, SegmentName );
-        std::cout << "        Global Rotation Helical: (" << _Output_GetSegmentGlobalRotationHelical.Rotation[ 0 ]     << ", " 
-                                                          << _Output_GetSegmentGlobalRotationHelical.Rotation[ 1 ]     << ", " 
-                                                          << _Output_GetSegmentGlobalRotationHelical.Rotation[ 2 ]     << ") " 
+        std::cout << "        Global Rotation Helical: (" << _Output_GetSegmentGlobalRotationHelical.Rotation[ 0 ]     << ", "
+                                                          << _Output_GetSegmentGlobalRotationHelical.Rotation[ 1 ]     << ", "
+                                                          << _Output_GetSegmentGlobalRotationHelical.Rotation[ 2 ]     << ") "
                                                           << Adapt( _Output_GetSegmentGlobalRotationHelical.Occluded ) << std::endl;
 
         // Get the global segment rotation as a matrix
-        Output_GetSegmentGlobalRotationMatrix _Output_GetSegmentGlobalRotationMatrix = 
+        Output_GetSegmentGlobalRotationMatrix _Output_GetSegmentGlobalRotationMatrix =
           MyClient.GetSegmentGlobalRotationMatrix( SubjectName, SegmentName );
-        std::cout << "        Global Rotation Matrix: (" << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 0 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 1 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 2 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 3 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 4 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 5 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 6 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 7 ]     << ", " 
-                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 8 ]     << ") " 
+        std::cout << "        Global Rotation Matrix: (" << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 0 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 1 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 2 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 3 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 4 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 5 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 6 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 7 ]     << ", "
+                                                         << _Output_GetSegmentGlobalRotationMatrix.Rotation[ 8 ]     << ") "
                                                          << Adapt( _Output_GetSegmentGlobalRotationMatrix.Occluded ) << std::endl;
 
         // Get the global segment rotation in quaternion co-ordinates
-        Output_GetSegmentGlobalRotationQuaternion _Output_GetSegmentGlobalRotationQuaternion = 
+        Output_GetSegmentGlobalRotationQuaternion _Output_GetSegmentGlobalRotationQuaternion =
           MyClient.GetSegmentGlobalRotationQuaternion( SubjectName, SegmentName );
-        std::cout << "        Global Rotation Quaternion: (" << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 0 ]     << ", " 
-                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 1 ]     << ", " 
-                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 2 ]     << ", " 
-                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 3 ]     << ") " 
+        std::cout << "        Global Rotation Quaternion: (" << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 0 ]     << ", "
+                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 1 ]     << ", "
+                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 2 ]     << ", "
+                                                             << _Output_GetSegmentGlobalRotationQuaternion.Rotation[ 3 ]     << ") "
                                                              << Adapt( _Output_GetSegmentGlobalRotationQuaternion.Occluded ) << std::endl;
 
         // Get the global segment rotation in EulerXYZ co-ordinates
-        Output_GetSegmentGlobalRotationEulerXYZ _Output_GetSegmentGlobalRotationEulerXYZ = 
+        Output_GetSegmentGlobalRotationEulerXYZ _Output_GetSegmentGlobalRotationEulerXYZ =
           MyClient.GetSegmentGlobalRotationEulerXYZ( SubjectName, SegmentName );
-        std::cout << "        Global Rotation EulerXYZ: (" << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 0 ]     << ", " 
-                                                           << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 1 ]     << ", " 
-                                                           << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 2 ]     << ") " 
+        std::cout << "        Global Rotation EulerXYZ: (" << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 0 ]     << ", "
+                                                           << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 1 ]     << ", "
+                                                           << _Output_GetSegmentGlobalRotationEulerXYZ.Rotation[ 2 ]     << ") "
                                                            << Adapt( _Output_GetSegmentGlobalRotationEulerXYZ.Occluded ) << std::endl;
 
         // Get the local segment translation
-        Output_GetSegmentLocalTranslation _Output_GetSegmentLocalTranslation = 
+        Output_GetSegmentLocalTranslation _Output_GetSegmentLocalTranslation =
           MyClient.GetSegmentLocalTranslation( SubjectName, SegmentName );
-        std::cout << "        Local Translation: (" << _Output_GetSegmentLocalTranslation.Translation[ 0 ]  << ", " 
-                                                    << _Output_GetSegmentLocalTranslation.Translation[ 1 ]  << ", " 
-                                                    << _Output_GetSegmentLocalTranslation.Translation[ 2 ]  << ") " 
+        std::cout << "        Local Translation: (" << _Output_GetSegmentLocalTranslation.Translation[ 0 ]  << ", "
+                                                    << _Output_GetSegmentLocalTranslation.Translation[ 1 ]  << ", "
+                                                    << _Output_GetSegmentLocalTranslation.Translation[ 2 ]  << ") "
                                                     << Adapt( _Output_GetSegmentLocalTranslation.Occluded ) << std::endl;
 
         // Get the local segment rotation in helical co-ordinates
-        Output_GetSegmentLocalRotationHelical _Output_GetSegmentLocalRotationHelical = 
+        Output_GetSegmentLocalRotationHelical _Output_GetSegmentLocalRotationHelical =
           MyClient.GetSegmentLocalRotationHelical( SubjectName, SegmentName );
-        std::cout << "        Local Rotation Helical: (" << _Output_GetSegmentLocalRotationHelical.Rotation[ 0 ]     << ", " 
-                                                         << _Output_GetSegmentLocalRotationHelical.Rotation[ 1 ]     << ", " 
-                                                         << _Output_GetSegmentLocalRotationHelical.Rotation[ 2 ]     << ") " 
+        std::cout << "        Local Rotation Helical: (" << _Output_GetSegmentLocalRotationHelical.Rotation[ 0 ]     << ", "
+                                                         << _Output_GetSegmentLocalRotationHelical.Rotation[ 1 ]     << ", "
+                                                         << _Output_GetSegmentLocalRotationHelical.Rotation[ 2 ]     << ") "
                                                          << Adapt( _Output_GetSegmentLocalRotationHelical.Occluded ) << std::endl;
 
         // Get the local segment rotation as a matrix
-        Output_GetSegmentLocalRotationMatrix _Output_GetSegmentLocalRotationMatrix = 
+        Output_GetSegmentLocalRotationMatrix _Output_GetSegmentLocalRotationMatrix =
           MyClient.GetSegmentLocalRotationMatrix( SubjectName, SegmentName );
-        std::cout << "        Local Rotation Matrix: (" << _Output_GetSegmentLocalRotationMatrix.Rotation[ 0 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 1 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 2 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 3 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 4 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 5 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 6 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 7 ]     << ", " 
-                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 8 ]     << ") " 
+        std::cout << "        Local Rotation Matrix: (" << _Output_GetSegmentLocalRotationMatrix.Rotation[ 0 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 1 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 2 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 3 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 4 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 5 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 6 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 7 ]     << ", "
+                                                        << _Output_GetSegmentLocalRotationMatrix.Rotation[ 8 ]     << ") "
                                                         << Adapt( _Output_GetSegmentLocalRotationMatrix.Occluded ) << std::endl;
 
         // Get the local segment rotation in quaternion co-ordinates
-        Output_GetSegmentLocalRotationQuaternion _Output_GetSegmentLocalRotationQuaternion = 
+        Output_GetSegmentLocalRotationQuaternion _Output_GetSegmentLocalRotationQuaternion =
           MyClient.GetSegmentLocalRotationQuaternion( SubjectName, SegmentName );
-        std::cout << "        Local Rotation Quaternion: (" << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 0 ]     << ", " 
-                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 1 ]     << ", " 
-                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 2 ]     << ", " 
-                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 3 ]     << ") " 
+        std::cout << "        Local Rotation Quaternion: (" << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 0 ]     << ", "
+                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 1 ]     << ", "
+                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 2 ]     << ", "
+                                                            << _Output_GetSegmentLocalRotationQuaternion.Rotation[ 3 ]     << ") "
                                                             << Adapt( _Output_GetSegmentLocalRotationQuaternion.Occluded ) << std::endl;
 
         // Get the local segment rotation in EulerXYZ co-ordinates
-        Output_GetSegmentLocalRotationEulerXYZ _Output_GetSegmentLocalRotationEulerXYZ = 
+        Output_GetSegmentLocalRotationEulerXYZ _Output_GetSegmentLocalRotationEulerXYZ =
           MyClient.GetSegmentLocalRotationEulerXYZ( SubjectName, SegmentName );
-        std::cout << "        Local Rotation EulerXYZ: (" << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 0 ]     << ", " 
-                                                          << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 1 ]     << ", " 
-                                                          << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 2 ]     << ") " 
+        std::cout << "        Local Rotation EulerXYZ: (" << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 0 ]     << ", "
+                                                          << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 1 ]     << ", "
+                                                          << _Output_GetSegmentLocalRotationEulerXYZ.Rotation[ 2 ]     << ") "
                                                           << Adapt( _Output_GetSegmentLocalRotationEulerXYZ.Occluded ) << std::endl;
       }
 
@@ -408,7 +409,7 @@ int main( int argc, char* argv[] )
     unsigned int UnlabeledMarkerCount = MyClient.GetUnlabeledMarkerCount().MarkerCount;
     std::cout << "  Unlabeled Markers (" << UnlabeledMarkerCount << "):" << std::endl;
     for( unsigned int UnlabeledMarkerIndex = 0 ; UnlabeledMarkerIndex < UnlabeledMarkerCount ; ++UnlabeledMarkerIndex )
-    { 
+    {
       // Get the global marker translation
       Output_GetUnlabeledMarkerGlobalTranslation _Output_GetUnlabeledMarkerGlobalTranslation =
         MyClient.GetUnlabeledMarkerGlobalTranslation( UnlabeledMarkerIndex );
@@ -437,17 +438,17 @@ int main( int argc, char* argv[] )
       for( unsigned int DeviceOutputIndex = 0 ; DeviceOutputIndex < DeviceOutputCount ; ++DeviceOutputIndex )
       {
         // Get the device output name and unit
-        Output_GetDeviceOutputName _Output_GetDeviceOutputName = 
+        Output_GetDeviceOutputName _Output_GetDeviceOutputName =
           MyClient.GetDeviceOutputName( _Output_GetDeviceName.DeviceName, DeviceOutputIndex );
 
         // Get the device output value
-        Output_GetDeviceOutputValue _Output_GetDeviceOutputValue = 
+        Output_GetDeviceOutputValue _Output_GetDeviceOutputValue =
           MyClient.GetDeviceOutputValue( _Output_GetDeviceName.DeviceName, _Output_GetDeviceOutputName.DeviceOutputName );
 
         std::cout << "        Device Output #" << DeviceOutputIndex                                     << ": "
                                                << _Output_GetDeviceOutputName.DeviceOutputName          << " "
-                                               << _Output_GetDeviceOutputValue.Value                    << " " 
-                                               << Adapt( _Output_GetDeviceOutputName.DeviceOutputUnit ) << " " 
+                                               << _Output_GetDeviceOutputValue.Value                    << " "
+                                               << Adapt( _Output_GetDeviceOutputName.DeviceOutputUnit ) << " "
                                                << Adapt( _Output_GetDeviceOutputValue.Occluded )        << std::endl;
       }
     }

@@ -31,20 +31,20 @@ generate_dynamic_reconfigure_options(
   cfg/tf_distort.cfg
 )
 
-catkin_package(CATKIN_DEPENDS 
+catkin_package(CATKIN_DEPENDS
     dynamic_reconfigure
     geometry_msgs
-    message_runtime 
-    roscpp 
+    message_runtime
+    roscpp
 )
 
 # check for platform and use the right Vicon SDK
 if(CMAKE_SIZEOF_VOID_P MATCHES "8")
-    set(VICON_SDK             vicon_sdk/Vicon_SDK_1.3_Linux/64-bit/)
+    set(VICON_SDK             vicon_sdk/Vicon_SDK_1.7.1/Linux64/)
     set(VICON_SDK_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/${VICON_SDK})
     set(VICON_SDK_LINK_DIR    ${PROJECT_SOURCE_DIR}/${VICON_SDK})
 elseif(CMAKE_SIZEOF_VOID_P MATCHES "4")
-    set(VICON_SDK             vicon_sdk/Vicon_SDK_1.3_Linux/32-bit/)
+    set(VICON_SDK             vicon_sdk/Vicon_SDK_1.7.1/Linux32/)
     set(VICON_SDK_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/${VICON_SDK})
     set(VICON_SDK_LINK_DIR    ${PROJECT_SOURCE_DIR}/${VICON_SDK})
 else(CMAKE_SIZEOF_VOID_P MATCHES "8")
@@ -78,7 +78,7 @@ target_link_libraries(tf_distort
 add_dependencies(tf_distort ${PROJECT_NAME}_gencpp ${PROJECT_NAME}_gencfg)
 
 add_executable(testclient src/ViconDataStreamSDK_CPPTest.cpp)
-target_link_libraries(testclient 
+target_link_libraries(testclient
     ${VICON_SDK_LIBRARY}
     ${Boost_LIBRARIES}
 )

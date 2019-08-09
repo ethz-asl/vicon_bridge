@@ -14,7 +14,8 @@
 
 #endif
 
-#include <Client.h>
+// #include <Client.h>
+#include <DataStreamClient.h>
 
 /***
  * This was the desperate try to get this compiled for windows so that it can be executed on the PC running Tracker.

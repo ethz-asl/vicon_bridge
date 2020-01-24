@@ -1,8 +1,16 @@
+<?xml version="1.0"?>
+
 <launch>
-	<node pkg="vicon_bridge" type="vicon_bridge" name="vicon" output="screen">
-		<param name="stream_mode" value="ClientPull" type="str" />
-		<!--param name="datastream_hostport" value="192.168.0.13:801" type="str" /-->
-		<param name="datastream_hostport" value="vicon:801" type="str" />
-		<param name="tf_ref_frame_id" value="/world" type="str" />
-		</node>
+
+  <!-- Fixed vicon world frame -->
+  <arg name="datastream_hostport" default="192.168.94.81:801"/>
+  <!-- Fixed vicon world frame -->
+  <arg name="vicon_world_frame" default="/vicon/world"/>
+
+	<node pkg="vicon_bridge" type="vicon_bridge" name="vicon" output="screen" >
+		<param name="stream_mode" value="ServerPush"/>
+    <param name="datastream_hostport" value="$(arg datastream_hostport)"/>
+		<param name="tf_ref_frame_id" value="$(arg vicon_world_frame)"/>
+	</node>
+
 </launch>

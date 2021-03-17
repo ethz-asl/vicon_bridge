@@ -33,24 +33,26 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-#include <Client.h>
+#include <iostream>
+#include <map>
+#include <unordered_map>
+
+// ROS
 #include <ros/ros.h>
-#include <diagnostic_updater/diagnostic_updater.h>
-#include <diagnostic_updater/update_functions.h>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <vicon_bridge/viconGrabPose.h>
-#include <iostream>
-
 #include <vicon_bridge/Markers.h>
 #include <vicon_bridge/Marker.h>
-
-#include "msvc_bridge.h"
-#include <map>
-#include <boost/thread.hpp>
 #include <vicon_bridge/viconCalibrateSegment.h>
-#include <tf/transform_listener.h>
+
+// Vicon
+#include <ViconDataStreamSDK_CPP/DataStreamClient.h>
+
+#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/update_functions.h>
 
 using std::min;
 using std::max;
@@ -171,7 +173,6 @@ private:
   // TODO: Make the following configurable:
   ros::ServiceServer m_grab_vicon_pose_service_server;
   ros::ServiceServer calibrate_segment_server_;
-  //  ViconDataStreamSDK::CPP::Client MyClient;
   unsigned int lastFrameNumber;
   unsigned int frameCount;
   unsigned int droppedFrameCount;
@@ -186,10 +187,13 @@ private:
   bool broadcast_tf_, publish_tf_, publish_markers_;
 
   bool grab_frames_;
-  boost::thread grab_frames_thread_;
+  // boost::thread grab_frames_thread_;
+  // std::unordered_map<std::string, ros::Publisher> segment_publishers_;
   SegmentMap segment_publishers_;
   boost::mutex segments_mutex_;
   std::vector<std::string> time_log_;
+
+  Client vicon_client_;
 
 public:
   void startGrabbing()
@@ -207,12 +211,14 @@ public:
   }
 
   ViconReceiver() :
-    nh_priv("~"), diag_updater(), min_freq_(0.1), max_freq_(1000),
-        freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)), stream_mode_("ClientPull"),
+    nh_priv("~"),
+    diag_updater(),
+    min_freq_(0.1), max_freq_(1000),
+    freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)),
+    stream_mode_("ClientPull"),
         host_name_(""), tf_ref_frame_id_("world"), tracked_frame_suffix_("vicon"),
         lastFrameNumber(0), frameCount(0), droppedFrameCount(0), frame_datum(0), n_markers(0), n_unlabeled_markers(0),
         marker_data_enabled(false), unlabeled_marker_data_enabled(false), grab_frames_(false)
-
   {
     // Diagnostics
     diag_updater.add("ViconReceiver Status", this, &ViconReceiver::diagnostics);
@@ -276,26 +282,26 @@ private:
     ros::Duration d(1);
     Result::Enum result(Result::Unknown);
 
-    while (!msvcbridge::IsConnected().Connected)
+    while (!vicon_client_.IsConnected().Connected)
     {
-      msvcbridge::Connect(host_name_);
+      vicon_client_.Connect(host_name_);
       ROS_INFO(".");
       d.sleep();
       ros::spinOnce();
       if (!ros::ok())
         return false;
     }
-    ROS_ASSERT(msvcbridge::IsConnected().Connected);
+    ROS_ASSERT(vicon_client_.IsConnected().Connected);
     ROS_INFO_STREAM("... connected!");
 
     // ClientPullPrefetch doesn't make much sense here, since we're only forwarding the data
     if (stream_mode_ == "ServerPush")
     {
-      result = msvcbridge::SetStreamMode(StreamMode::ServerPush).Result;
+      result = vicon_client_.SetStreamMode(StreamMode::ServerPush).Result;
     }
     else if (stream_mode_ == "ClientPull")
     {
-      result = msvcbridge::SetStreamMode(StreamMode::ClientPull).Result;
+      result = vicon_client_.SetStreamMode(StreamMode::ClientPull).Result;
     }
     else
     {
@@ -305,16 +311,16 @@ private:
 
     ROS_INFO_STREAM("Setting Stream Mode to " << stream_mode_<< ": "<< Adapt(result));
 
-    msvcbridge::SetAxisMapping(Direction::Forward, Direction::Left, Direction::Up); // 'Z-up'
-    Output_GetAxisMapping _Output_GetAxisMapping = msvcbridge::GetAxisMapping();
+    vicon_client_.SetAxisMapping(Direction::Forward, Direction::Left, Direction::Up); // 'Z-up'
+    Output_GetAxisMapping _Output_GetAxisMapping = vicon_client_.GetAxisMapping();
 
     ROS_INFO_STREAM("Axis Mapping: X-" << Adapt(_Output_GetAxisMapping.XAxis) << " Y-"
         << Adapt(_Output_GetAxisMapping.YAxis) << " Z-" << Adapt(_Output_GetAxisMapping.ZAxis));
 
-    msvcbridge::EnableSegmentData();
-    ROS_ASSERT(msvcbridge::IsSegmentDataEnabled().Enabled);
+    vicon_client_.EnableSegmentData();
+    ROS_ASSERT(vicon_client_.IsSegmentDataEnabled().Enabled);
 
-    Output_GetVersion _Output_GetVersion = msvcbridge::GetVersion();
+    Output_GetVersion _Output_GetVersion = vicon_client_.GetVersion();
     ROS_INFO_STREAM("Version: " << _Output_GetVersion.Major << "." << _Output_GetVersion.Minor << "."
         << _Output_GetVersion.Point);
     return true;
@@ -371,26 +377,16 @@ private:
 
   void grabThread()
   {
-    ros::Duration d(1.0 / 240.0);
-//    ros::Time last_time = ros::Time::now();
-//    double fps = 100.;
-//    ros::Duration diff;
-//    std::stringstream time_log;
+    ros::Duration d(1.0 / 240.0);  // TODO: Configurable
+
     while (ros::ok() && grab_frames_)
     {
-      while (msvcbridge::GetFrame().Result != Result::Success && ros::ok())
+      while (vicon_client_.GetFrame().Result != Result::Success && ros::ok())
       {
         ROS_INFO("getFrame returned false");
         d.sleep();
       }
       now_time = ros::Time::now();
-//      diff = now_time-last_time;
-//      fps = 1.0/(0.9/fps + 0.1*diff.toSec());
-//      time_log.clear();
-//      time_log.str("");
-//      time_log <<"timings: dt="<<diff<<" fps=" <<fps;
-//      time_log_.push_back(time_log.str());
-//      last_time = now_time;
 
       bool was_new_frame = process_frame();
       ROS_WARN_COND(!was_new_frame, "grab frame returned false");
@@ -404,8 +400,8 @@ private:
     ROS_INFO_STREAM("stopping grabbing thread");
     stopGrabbing();
     ROS_INFO_STREAM("Disconnecting from Vicon DataStream SDK");
-    msvcbridge::Disconnect();
-    ROS_ASSERT(!msvcbridge::IsConnected().Connected);
+    vicon_client_.Disconnect();
+    ROS_ASSERT(!vicon_client_.IsConnected().Connected);
     ROS_INFO_STREAM("... disconnected.");
     return true;
   }
@@ -413,7 +409,7 @@ private:
   bool process_frame()
   {
     static ros::Time lastTime;
-    Output_GetFrameNumber OutputFrameNum = msvcbridge::GetFrameNumber();
+    Output_GetFrameNumber OutputFrameNum = vicon_client_.GetFrameNumber();
 
     //frameCount++;
     //ROS_INFO_STREAM("Grabbed a frame: " << OutputFrameNum.FrameNumber);
@@ -439,7 +435,7 @@ private:
     else
     {
       freq_status_.tick();
-      ros::Duration vicon_latency(msvcbridge::GetLatencyTotal().Total);
+      ros::Duration vicon_latency(vicon_client_.GetLatencyTotal().Total);
 
       if(publish_tf_ || broadcast_tf_)
       {
@@ -459,7 +455,7 @@ private:
   void process_subjects(const ros::Time& frame_time)
   {
     string tracked_frame, subject_name, segment_name;
-    unsigned int n_subjects = msvcbridge::GetSubjectCount().SubjectCount;
+    unsigned int n_subjects = vicon_client_.GetSubjectCount().SubjectCount;
     SegmentMap::iterator pub_it;
     tf::Transform transform;
     std::vector<tf::StampedTransform, std::allocator<tf::StampedTransform> > transforms;
@@ -469,15 +465,15 @@ private:
     for (unsigned int i_subjects = 0; i_subjects < n_subjects; i_subjects++)
     {
 
-      subject_name = msvcbridge::GetSubjectName(i_subjects).SubjectName;
-      unsigned int n_segments = msvcbridge::GetSegmentCount(subject_name).SegmentCount;
+      subject_name = vicon_client_.GetSubjectName(i_subjects).SubjectName;
+      unsigned int n_segments = vicon_client_.GetSegmentCount(subject_name).SegmentCount;
 
       for (unsigned int i_segments = 0; i_segments < n_segments; i_segments++)
       {
-        segment_name = msvcbridge::GetSegmentName(subject_name, i_segments).SegmentName;
+        segment_name = vicon_client_.GetSegmentName(subject_name, i_segments).SegmentName;
 
-        Output_GetSegmentGlobalTranslation trans = msvcbridge::GetSegmentGlobalTranslation(subject_name, segment_name);
-        Output_GetSegmentGlobalRotationQuaternion quat = msvcbridge::GetSegmentGlobalRotationQuaternion(subject_name,
+        Output_GetSegmentGlobalTranslation trans = vicon_client_.GetSegmentGlobalTranslation(subject_name, segment_name);
+        Output_GetSegmentGlobalRotationQuaternion quat = vicon_client_.GetSegmentGlobalRotationQuaternion(subject_name,
                                                                                                         segment_name);
 
         if (trans.Result == Result::Success && quat.Result == Result::Success)
@@ -547,16 +543,16 @@ private:
   {
     if (marker_pub_.getNumSubscribers() > 0)
     {
-      if (not marker_data_enabled)
+      if (!marker_data_enabled)
       {
-        msvcbridge::EnableMarkerData();
-        ROS_ASSERT(msvcbridge::IsMarkerDataEnabled().Enabled);
+        vicon_client_.EnableMarkerData();
+        ROS_ASSERT(vicon_client_.IsMarkerDataEnabled().Enabled);
         marker_data_enabled = true;
       }
-      if (not unlabeled_marker_data_enabled)
+      if (!unlabeled_marker_data_enabled)
       {
-        msvcbridge::EnableUnlabeledMarkerData();
-        ROS_ASSERT(msvcbridge::IsUnlabeledMarkerDataEnabled().Enabled);
+        vicon_client_.EnableUnlabeledMarkerData();
+        ROS_ASSERT(vicon_client_.IsUnlabeledMarkerDataEnabled().Enabled);
         unlabeled_marker_data_enabled = true;
       }
       n_markers = 0;
@@ -564,26 +560,26 @@ private:
       markers_msg.header.stamp = frame_time;
       markers_msg.frame_number = vicon_frame_num;
       // Count the number of subjects
-      unsigned int SubjectCount = msvcbridge::GetSubjectCount().SubjectCount;
+      unsigned int SubjectCount = vicon_client_.GetSubjectCount().SubjectCount;
       // Get labeled markers
       for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
       {
-        std::string this_subject_name = msvcbridge::GetSubjectName(SubjectIndex).SubjectName;
+        std::string this_subject_name = vicon_client_.GetSubjectName(SubjectIndex).SubjectName;
         // Count the number of markers
-        unsigned int num_subject_markers = msvcbridge::GetMarkerCount(this_subject_name).MarkerCount;
+        unsigned int num_subject_markers = vicon_client_.GetMarkerCount(this_subject_name).MarkerCount;
         n_markers += num_subject_markers;
         //std::cout << "    Markers (" << MarkerCount << "):" << std::endl;
         for (unsigned int MarkerIndex = 0; MarkerIndex < num_subject_markers; ++MarkerIndex)
         {
           vicon_bridge::Marker this_marker;
-          this_marker.marker_name = msvcbridge::GetMarkerName(this_subject_name, MarkerIndex).MarkerName;
+          this_marker.marker_name = vicon_client_.GetMarkerName(this_subject_name, MarkerIndex).MarkerName;
           this_marker.subject_name = this_subject_name;
           this_marker.segment_name
-              = msvcbridge::GetMarkerParentName(this_subject_name, this_marker.marker_name).SegmentName;
+              = vicon_client_.GetMarkerParentName(this_subject_name, this_marker.marker_name).SegmentName;
 
           // Get the global marker translation
           Output_GetMarkerGlobalTranslation _Output_GetMarkerGlobalTranslation =
-              msvcbridge::GetMarkerGlobalTranslation(this_subject_name, this_marker.marker_name);
+              vicon_client_.GetMarkerGlobalTranslation(this_subject_name, this_marker.marker_name);
 
           this_marker.translation.x = _Output_GetMarkerGlobalTranslation.Translation[0];
           this_marker.translation.y = _Output_GetMarkerGlobalTranslation.Translation[1];
@@ -594,7 +590,7 @@ private:
         }
       }
       // get unlabeled markers
-      unsigned int UnlabeledMarkerCount = msvcbridge::GetUnlabeledMarkerCount().MarkerCount;
+      unsigned int UnlabeledMarkerCount = vicon_client_.GetUnlabeledMarkerCount().MarkerCount;
       //ROS_INFO("# unlabeled markers: %d", UnlabeledMarkerCount);
       n_markers += UnlabeledMarkerCount;
       n_unlabeled_markers = UnlabeledMarkerCount;
@@ -602,7 +598,7 @@ private:
       {
         // Get the global marker translation
         Output_GetUnlabeledMarkerGlobalTranslation _Output_GetUnlabeledMarkerGlobalTranslation =
-            msvcbridge::GetUnlabeledMarkerGlobalTranslation(UnlabeledMarkerIndex);
+            vicon_client_.GetUnlabeledMarkerGlobalTranslation(UnlabeledMarkerIndex);
 
         if (_Output_GetUnlabeledMarkerGlobalTranslation.Result == Result::Success)
         {
@@ -617,7 +613,6 @@ private:
         {
           ROS_WARN("GetUnlabeledMarkerGlobalTranslation failed (result = %s)",
               Adapt(_Output_GetUnlabeledMarkerGlobalTranslation.Result).c_str());
-
         }
       }
       marker_pub_.publish(markers_msg);
@@ -748,14 +743,11 @@ private:
 
     return true;
   }
-
 };
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "vicon");
-//  ViconReceiver vr;
-//  ros::spin();
 
   ros::AsyncSpinner aspin(1);
   aspin.start();

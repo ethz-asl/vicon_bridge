@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
     diagnostic_updater
 )
 
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED COMPONENTS thread date_time)
 
 # Generate messages and services
 add_message_files(FILES

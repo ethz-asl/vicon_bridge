@@ -31,11 +31,11 @@ generate_dynamic_reconfigure_options(
   cfg/tf_distort.cfg
 )
 
-catkin_package(CATKIN_DEPENDS 
+catkin_package(CATKIN_DEPENDS
     dynamic_reconfigure
     geometry_msgs
-    message_runtime 
-    roscpp 
+    message_runtime
+    roscpp
 )
 
 include_directories(

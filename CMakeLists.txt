@@ -69,3 +69,12 @@ add_dependencies(tf_distort ${PROJECT_NAME}_gencpp ${PROJECT_NAME}_gencfg)
 
 add_executable(testclient src/ViconDataStreamSDK_CPPTest.cpp)
 target_link_libraries(testclient vicon_sdk)
+
+install(TARGETS vicon_bridge vicon_sdk calibrate tf_distort testclient
+    EXPORT export_${PROJECT_NAME}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY cfg/ DESTINATION share/${PROJECT_NAME}/cfg)
+
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})

@@ -46,7 +46,7 @@ int main(int argc, char** argv)
   {
     const geometry_msgs::Quaternion & q = resp.pose.pose.orientation;
     const geometry_msgs::Point & t = resp.pose.pose.position;
-    ROS_INFO("calibration successful, q=[ %f %f %f %f ], t=[ %f %f %f ] ", q.w, q.x, q.y, q.x, t.x, t.y, t.z);
+    ROS_INFO("calibration successful, q=[ %f %f %f %f ], t=[ %f %f %f ] ", q.w, q.x, q.y, q.z, t.x, t.y, t.z);
   }
   else
   {
